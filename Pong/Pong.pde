@@ -3,15 +3,15 @@ import processing.serial.*;
 
 // Serial
 Serial myPort;                       // The serial port
-int inByte;    // Where we'll put what we receive
-int serialCount = 0;                 // A count of how many bytes we receive
-boolean firstContact = false;        // Whether we've heard from the microcontroller
-
+int IMUval = 0;
+boolean isMenu = true;
 
 
 Paddle paddleLeft;
 Paddle paddleRight;
 Ball ball;
+Menu menu;
+Explode explode;
 
 int scoreLeft = 0;
 int scoreRight = 0;
@@ -39,10 +39,16 @@ void setup() {
 void draw() {
   background(0);
   
+  if (scoreLeft == 10 || scoreRight == 10) {
+    isMenu = true;
+  }
+  
+  if (isMenu) {
+    menu = new Menu();
+    myPort.write(0x01);
+  } else {
+  
 
-  
-  
-  
   // Paddle out of bounds
   if (paddleLeft.bottom() > height) {
     paddleLeft.y = height-paddleLeft.h/2;
@@ -95,14 +101,13 @@ void draw() {
     }
   }
   
-  
+  // Goal scored
   if (ball.right() > width) {
     scoreLeft = scoreLeft + 1;
     ball.x = width/2;
     ball.y = height/2;
     ball.speedX = -1 * INITIAL_BALL_SPEED;
     ball.speedY = random(INITIAL_BALL_SPEED * -1, INITIAL_BALL_SPEED);
-    
   }
   if (ball.left() < 0) {
     scoreRight = scoreRight + 1;
@@ -125,40 +130,40 @@ void draw() {
   paddleRight.display();
   ball.move();
   ball.display();
+  }
 }
 
 
 void serialEvent(Serial myPort) {
-  println("yes");
-  //String in = myPort.readStringUntil(98);
-  //byte in[] = myPort.readBytesUntil('b');
-  /*
-  if (firstContact == false) {
-    
-    if (in == 'A') {
-      myPort.clear();
-      myPort.write('A'); // ask for more
-      println("Controller Connected!");    
-    } else {
-    */  
-      
-      //println(in);
-      //myPort.write('B');
-    //}
-  //} else {
-    
-    //serialInArray[serialCount] = inByte;
-    
-  //}
+  int inByte = myPort.read();
+  
+  if (isMenu) {
+    if (inByte == 1) {
+      println("Not Ready");
+    } else if (inByte == 2) {
+      println("Player is ready");
+      isMenu = false;
+      myPort.write(0x02);
+    }
+  }
+  else {
+    IMUval = inByte - 65;
+    println(IMUval);
+    paddleRight.y += IMUval * -0.1;
+    myPort.clear();
+    myPort.write(0x02);
+  }
+  
+  
   
 }
 
 void keyPressed(){
   if(keyCode == UP){
-    paddleRight.speedY = PADDLE_SPEED * -1;
+    //paddleRight.speedY = PADDLE_SPEED * -1;
   }
   if(keyCode == DOWN){
-    paddleRight.speedY = PADDLE_SPEED;
+    //paddleRight.speedY = PADDLE_SPEED;
   }
   if(key == 'w'){
     paddleLeft.speedY = PADDLE_SPEED * -1;
@@ -170,10 +175,10 @@ void keyPressed(){
 
 void keyReleased(){
   if(keyCode == UP){
-    paddleRight.speedY = 0;
+    //paddleRight.speedY = 0;
   }
   if(keyCode == DOWN){
-    paddleRight.speedY = 0;
+    //paddleRight.speedY = 0;
   }
   if(key == 'w'){
     paddleLeft.speedY = 0;
