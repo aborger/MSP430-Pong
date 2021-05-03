@@ -2,7 +2,7 @@ import processing.serial.*;
 
 
 // Serial
-Serial myPort;                       // The serial port
+Serial myPort;                   
 int IMUval = 0;
 boolean isMenu = true;
 
@@ -26,7 +26,7 @@ void setup() {
   
   println(Serial.list());
   
-  String portName = Serial.list()[2];
+  String portName = Serial.list()[0];
   myPort = new Serial(this, portName, 9600);
   
   paddleLeft = new Paddle(15, height/2, 30,200);
